@@ -14,15 +14,15 @@ using namespace std;
 struct Neural_Network {
 
     vector<Eigen::MatrixXd> connection_layers; // a list of 2d matrixes sized (# nodes in next layer, # nodes in current layer)
-    vector<Eigen::MatrixXd> neuron_layers; // a list of column matrixes size (# nodes in current later, 1)
+    vector<Eigen::MatrixXd> neuron_layers; // a list of column matrixes sized (# nodes in current later, 1)
     vector<Eigen::MatrixXd> bias_layers; // a list of column matrixes sized (# nodes in current later, 1)
 
     Neural_Network(const vector<int>& NN_layers){
         // Set up random number generator
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);
-        // std::uniform_real_distribution<double> distribution(-5.0, 5.0);
-        std::normal_distribution<double> distribution(0.0, 1.0 / sqrt(NN_layers[0]));  // Xavier initialization
+        std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+        // std::normal_distribution<double> distribution(0.0, 1.0 / sqrt(NN_layers[0]));  // Xavier initialization
 
 
         // Initialize connection_layers and bias_layers
@@ -183,22 +183,12 @@ void train_neural_network(Neural_Network* NN, const vector<vector<double>> train
 
         }
 
-        lr *= 0.9;
+        lr *= 0.7;
 
         cout << i << ":: " << full_cost_matrix.mean() << endl << endl;
 
     }
 }
-
-double calculate_network_accuracy(Neural_Network* NN, const vector<vector<double>> training_data, const vector<vector<double>> labels){
-
-    int correct = 0;
-    int incorrect = 0;
-
-    //will finish later
-
-}
-
 
 Eigen::MatrixXd predict_output_with_neural_network(Neural_Network* NN, vector<double> training_example){
 
@@ -214,5 +204,38 @@ Eigen::MatrixXd predict_output_with_neural_network(Neural_Network* NN, vector<do
     
     return results ;
 }
+
+
+double calculate_network_accuracy(Neural_Network* NN, const vector<vector<double>> training_data, const vector<vector<double>> labels){
+
+    int correct = 0;
+    int incorrect = 0;
+
+    for (int i=0 ; i<training_data.size() ; i++){
+
+        Eigen::MatrixXd results = predict_output_with_neural_network(NN, training_data[i]);
+        
+        Eigen::MatrixXd::Index maxRow, maxCol;
+        results.col(1).maxCoeff(&maxRow, &maxCol);
+
+        // Find the iterator to the largest element in labels[i]
+        auto max_it = std::max_element(labels[i].begin(), labels[i].end());
+
+        // Calculate the index of the largest element
+        int max_index = std::distance(labels[i].begin(), max_it);
+
+        if (maxRow == max_index){
+            correct+=1;
+        }
+        else{
+            incorrect++;
+        }
+    }
+
+    return (double)correct/(correct+incorrect) * 100;
+}
+
+
+
 
 #endif
