@@ -8,6 +8,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include "Visualiser.h"
 
 using namespace std;
 
@@ -233,6 +234,15 @@ double calculate_network_accuracy(Neural_Network* NN, const vector<vector<double
     }
 
     return (double)correct/(correct+incorrect) * 100;
+}
+
+void show_neural_network(Neural_Network* NN){
+    Win32GUI gui;
+
+    gui.drawNeuralNetwork(NN);
+    // gui.redraw();
+    gui.run();
+
 }
 
 
