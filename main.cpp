@@ -1,6 +1,10 @@
+#include <iostream>
+#include <chrono>
+#include <thread>
+
 #include "NeuralNetwork.h"
 #include "MNISTLoader.h"
-#include "Visualiser.h"
+#include "GuiMaker.h"
 
 using namespace std;
 
@@ -27,15 +31,19 @@ int main() {
 
     // Eigen::MatrixXd output_before_training = predict_output_with_neural_network(&NN, training_data[index]);
 
-    show_neural_network(&NN);
+    // show_neural_network(&NN);
+    
+    // Your main loop or other operations here
+    GUIMaker gui(L"Neural Network Visualization", &NN);
+    gui.Initialize();
 
     train_neural_network(&NN, temp_training_data, temp_targets, 3, 1);
 
-    show_image_in_terminal(training_data, training_targets, index);
+    // show_image_in_terminal(training_data, training_targets, index);
 
-    forward_pass(&NN, training_data[index]);
+    // forward_pass(&NN, training_data[index]);
 
-    show_neural_network(&NN);
+    // show_neural_network(&NN);
 
 
     // Eigen::MatrixXd output_after_training = predict_output_with_neural_network(&NN, training_data[index]);
