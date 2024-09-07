@@ -35,8 +35,8 @@ private:
     void GUIThreadFunction();
     void drawNeuralNetwork();
 
-    static const int WINDOW_WIDTH = 800;
-    static const int WINDOW_HEIGHT = 600;
+    static const int WINDOW_WIDTH = 1700;
+    static const int WINDOW_HEIGHT = 900;
 
 public:
     GUIMaker(const std::wstring& title, Neural_Network* neuralNetwork);
@@ -134,10 +134,9 @@ inline void GUIMaker::drawNeuralNetwork() {
     };
 
     int radius = 20;
-    int centre_x = WINDOW_WIDTH/2;
-    int centre_y = WINDOW_HEIGHT/2;
+    int buffer = 50;
 
-    int x_division_width = (double)(0.8 * WINDOW_WIDTH) / (NN->neuron_layers.size() + 1);
+    int x_division_width = (WINDOW_WIDTH - (2 * buffer)) / (NN->neuron_layers.size() - 1);
 
     std::vector<std::vector<POINT>> layerPoints;
 
@@ -145,13 +144,15 @@ inline void GUIMaker::drawNeuralNetwork() {
     for (int layer = 0; layer < NN->neuron_layers.size(); layer++) {
         std::vector<POINT> currentLayerPoints;
         for (int neuron = 0; neuron < NN->neuron_layers[layer].rows(); neuron++) {
-            int y_division_width = (double)(0.9 * WINDOW_HEIGHT) / (NN->neuron_layers[layer].rows() + 1);
+            int y_division_width = (WINDOW_HEIGHT - (2 * buffer)) / (NN->neuron_layers[layer].rows() - 1);
 
-            int x = centre_x - ((0.8 * WINDOW_WIDTH) / 2) + (layer + 1) * x_division_width;
-            int y = centre_y;
+            // int x = centre_x - ((0.8 * WINDOW_WIDTH) / 2) + ((layer) * x_division_width);
+            int x = buffer + (layer * x_division_width);
+            int y = WINDOW_HEIGHT/2;
             
             if (y_division_width != 0) {
-                y = centre_y - ((0.9 * WINDOW_HEIGHT) / 2) + (neuron + 1) * y_division_width;
+                // y = (int)(double)centre_y - ((0.9 * WINDOW_HEIGHT) / 2) + ((neuron) * y_division_width);
+                y = buffer + (neuron * y_division_width);
             }
 
             currentLayerPoints.push_back({x, y});

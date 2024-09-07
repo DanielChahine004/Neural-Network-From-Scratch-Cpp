@@ -11,6 +11,9 @@ using namespace std;
 
 int main() {
     Neural_Network NN({784, 16, 16, 10});
+
+    // Neural_Network NN = load_neural_network("2024-09-07 MNIST NN");
+
     // Neural_Network NN({784, 2, 2, 10});
     // Neural_Network NN({784, 3, 3, 3, 3, 3, 3, 3, 3, 10});
 
@@ -38,6 +41,7 @@ int main() {
     gui.Initialize();
 
     train_neural_network(&NN, temp_training_data, temp_targets, 3, 1);
+    // save_neural_network(&NN, "2024-09-07 MNIST NN");
 
     // show_image_in_terminal(training_data, training_targets, index);
 

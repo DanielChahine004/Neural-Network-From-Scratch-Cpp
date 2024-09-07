@@ -8,6 +8,9 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <fstream>
+#include <sstream>
+#include <Eigen/Dense>
 
 using namespace std;
 
@@ -59,6 +62,69 @@ struct Neural_Network {
         cout << endl << endl;
     }
 };
+
+void save_neural_network(const Neural_Network* NN, const std::string& filename) {
+    std::ofstream file(filename);
+
+    // Save network structure
+    file << NN->neuron_layers.size() << "\n";
+    for (const auto& layer : NN->neuron_layers) {
+        file << layer.rows() << " ";
+    }
+    file << "\n";
+
+    // Save connection layers
+    for (const auto& layer : NN->connection_layers) {
+        for (int i = 0; i < layer.rows(); ++i) {
+            for (int j = 0; j < layer.cols(); ++j) {
+                file << layer(i, j) << " ";
+            }
+            file << "\n";
+        }
+    }
+
+    // Save bias layers
+    for (const auto& layer : NN->bias_layers) {
+        for (int i = 0; i < layer.rows(); ++i) {
+            file << layer(i, 0) << " ";
+        }
+        file << "\n";
+    }
+}
+
+Neural_Network load_neural_network(const std::string& filename) {
+    std::ifstream file(filename);
+    std::string line;
+    int num_layers;
+
+    // Load network structure
+    file >> num_layers;
+    std::vector<int> NN_layers(num_layers);
+    for (int i = 0; i < num_layers; ++i) {
+        file >> NN_layers[i];
+    }
+
+    // Create new Neural_Network with the loaded structure
+    Neural_Network NN(NN_layers);
+
+    // Load connection layers
+    for (auto& layer : NN.connection_layers) {
+        for (int i = 0; i < layer.rows(); ++i) {
+            for (int j = 0; j < layer.cols(); ++j) {
+                file >> layer(i, j);
+            }
+        }
+    }
+
+    // Load bias layers
+    for (auto& layer : NN.bias_layers) {
+        for (int i = 0; i < layer.rows(); ++i) {
+            file >> layer(i, 0);
+        }
+    }
+
+    return NN;
+}
 
 // Sigmoid activation function for scalar values
 double sigmoid(double x) {
