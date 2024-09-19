@@ -30,22 +30,25 @@ int main() {
 
 
 
-    int index = 1043;
+    int index = 1059;
 
     // Eigen::MatrixXd output_before_training = predict_output_with_neural_network(&NN, training_data[index]);
 
     // show_neural_network(&NN);
     
-    // Your main loop or other operations here
     GUIMaker gui(L"Neural Network Visualization", &NN);
     gui.Initialize();
 
-    train_neural_network(&NN, temp_training_data, temp_targets, 3, 1);
+    train_neural_network(&NN, temp_training_data, temp_targets, 3, 2, 10);
     // save_neural_network(&NN, "2024-09-07 MNIST NN");
 
-    // show_image_in_terminal(training_data, training_targets, index);
+    show_image_in_terminal(training_data, training_targets, index);
 
-    // forward_pass(&NN, training_data[index]);
+    forward_pass(&NN, training_data[index]);
+
+    Eigen::MatrixXd results = predict_output_with_neural_network(&NN, training_data[index]);
+
+    cout << results << endl;
 
     // show_neural_network(&NN);
 
@@ -56,8 +59,8 @@ int main() {
     // cout << output_after_training << endl << endl;
 
 
-    // double accuracy = calculate_network_accuracy(&NN, validation_data, validation_targets);
-    // cout << accuracy << "% of the dataset was correctly identified" << endl;
+    double accuracy = calculate_network_accuracy(&NN, validation_data, validation_targets);
+    cout << accuracy << "% of the dataset was correctly identified" << endl;
 
     return 0;
 }

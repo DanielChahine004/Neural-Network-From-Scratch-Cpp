@@ -17,8 +17,10 @@ using namespace std;
 struct Neural_Network {
 
     vector<Eigen::MatrixXd> connection_layers; // a list of 2d matrixes sized (# nodes in next layer, # nodes in current layer)
+    vector<Eigen::MatrixXd> connection_update_layers; // a list of 2d matrixes sized (# nodes in next layer, # nodes in current layer)
     vector<Eigen::MatrixXd> neuron_layers; // a list of column matrixes sized (# nodes in current later, 1)
     vector<Eigen::MatrixXd> bias_layers; // a list of column matrixes sized (# nodes in current later, 1)
+    vector<Eigen::MatrixXd> bias_update_layers; // a list of column matrixes sized (# nodes in current later, 1)
 
     Neural_Network(const vector<int>& NN_layers){
         // Set up random number generator
@@ -38,6 +40,7 @@ struct Neural_Network {
         for (int i = 0; i < NN_layers.size() - 1; i++) { // i goes 0, 1, 2
 
             Eigen::MatrixXd connection_matrix = Eigen::MatrixXd::Zero(NN_layers[i+1], NN_layers[i]);
+            Eigen::MatrixXd connection_update_matrix = Eigen::MatrixXd::Zero(NN_layers[i+1], NN_layers[i]);
             for (int right = 0; right < connection_matrix.rows(); right++) {
                 for (int left = 0; left < connection_matrix.cols(); left++) {
                     // connection_matrix(right, left) = 0.95;
@@ -45,13 +48,16 @@ struct Neural_Network {
                 }
             }
             connection_layers.push_back(connection_matrix);
+            connection_update_layers.push_back(connection_matrix);
 
             Eigen::MatrixXd bias_matrix = Eigen::MatrixXd::Zero(NN_layers[i+1], 1);
+            Eigen::MatrixXd bias_update_matrix = Eigen::MatrixXd::Zero(NN_layers[i+1], 1);
             for (int neuron = 0; neuron < bias_matrix.rows(); neuron++) {
                 // bias_matrix(neuron, 0) = 0;
                 bias_matrix(neuron, 0) = distribution(generator);
             }
             bias_layers.push_back(bias_matrix);
+            bias_update_layers.push_back(bias_update_matrix);
         }
 
         cout << " ----------------------------------------------------------------------------" << endl;
@@ -162,7 +168,7 @@ Eigen::MatrixXd forward_pass(Neural_Network* NN, vector<double> entry){  // uses
 
 
 
-void back_propagate(Neural_Network* NN, const Eigen::MatrixXd loss_matrix, const std::vector<double> labels, double learning_rate) { // the big fucker
+void back_propagate(Neural_Network* NN, const Eigen::MatrixXd loss_matrix, const std::vector<double> labels) { // the big fucker
 
     // Initialize DConDWs as a matrix list of equal size and dimensions as NN->connection_layers to hold the gradients of each weight in the network
     std::vector<Eigen::MatrixXd> DConDWs; // makes a list of matrixes the same size as connection_layers so each weight has a corresponding delta
@@ -218,20 +224,35 @@ void back_propagate(Neural_Network* NN, const Eigen::MatrixXd loss_matrix, const
         }
     }
 
+    for (int L=0 ; L<NN->connection_layers.size() ; L++){ // L goes 0, 1, 2
+        NN->connection_update_layers[L].array() += DConDWs[L].array(); // store the updates to the connection_layers in the connection_update_layers matrix
+        NN->bias_update_layers[L] += all_neuron_deltas[L]; // store the updates to the neuron biases (using deltas) in the neuron_update_layers matrix 
+    }
+    
+}
+
+
+void update_weights_and_biases(Neural_Network* NN, double learning_rate, double batch_counter){
+    
     // Updates the the weights and biases with respect to their gradient relationship to the cost function and a learning rate (- ve to travel down the gradient)
     for (int L=0 ; L<NN->connection_layers.size() ; L++){ // L goes 0, 1, 2
-        NN->connection_layers[L].array() += DConDWs[L].array() * learning_rate; // update the connection_layers by the negative gradient times a learning rate
-        NN->bias_layers[L] += all_neuron_deltas[L] * learning_rate; // update the neuron biases (using deltas) by the negative gradient times a learning rate
 
-        // cout << DConDWs.back() << endl << endl;
+        // Update the NN connection and bias layers
+        NN->connection_layers[L] += (learning_rate / batch_counter) * NN->connection_update_layers[L];
+        NN->bias_layers[L] += (learning_rate / batch_counter) * NN->bias_update_layers[L];
+
+        // Reset connection and bias update layer to zero
+        NN->connection_update_layers[L].setZero();
+        NN->bias_update_layers[L].setZero();
 
     }
 }
 
 
-void train_neural_network(Neural_Network* NN, const vector<vector<double>> training_data, const vector<vector<double>> labels, int epochs, double learning_rate){
+void train_neural_network(Neural_Network* NN, const vector<vector<double>> training_data, const vector<vector<double>> labels, int epochs, double learning_rate, int batch_size){
 
     double lr = learning_rate;
+    int batch_counter = 0;
 
     for (int i=0 ; i<epochs ; i++){
 
@@ -243,14 +264,20 @@ void train_neural_network(Neural_Network* NN, const vector<vector<double>> train
             Eigen::MatrixXd loss_matrix = calculate_loss_matrix(output_matrix, labels[example]); // (y - a^L)^2 // this is good fa sho
             full_cost_matrix(example,0) = loss_matrix.sum() / loss_matrix.rows(); // average the loss of all output predictions for this training example and append it to the full_cost_matrix matrix
 
-            back_propagate(NN, loss_matrix, labels[example], lr);
+            back_propagate(NN, loss_matrix, labels[example]);
+            batch_counter++;
 
+            if (batch_counter == batch_size || example == training_data.size()-1){ // if we have iterated over batch_size examples, or are up to the last example, update weights and biases
+                update_weights_and_biases(NN, lr, batch_counter);
+                cout<< batch_counter << endl;
+                batch_counter = 0;
+                // cout << "updated weights and biases" << endl;
+            }
             // cout << (double) example/training_data.size() * 100 / epochs << "% complete" << endl;
 
         }
 
-        lr *= 0.7;
-
+        lr *= 0.8;
         cout << i << ":: " << full_cost_matrix.mean() << endl << endl;
 
     }
