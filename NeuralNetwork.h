@@ -189,7 +189,7 @@ void back_propagate(Neural_Network* NN, const Eigen::MatrixXd loss_matrix, const
     // Sets the deltas of the last layers neurons ---------- 7:33 Backpropagation Algorithm | Neural Networks video
     for (int neuron = 0; neuron < NN->neuron_layers.back().rows(); neuron++) { // neuron goes 0, 1, 2, ... 9
         double AonZ = NN->neuron_layers.back()(neuron, 0)  *  (  1  -  NN->neuron_layers.back()(neuron, 0)  ); // AonZ = a(L) * (1-a(L))
-        double ConA = 2 * (labels[neuron] - NN->neuron_layers.back()(neuron, 0)); // ConA = 2(desired output for that neuron - that neurons activation)
+        double ConA = -2 * (labels[neuron] - NN->neuron_layers.back()(neuron, 0)); // ConA = -2 * (desired output for that neuron - that neurons activation)
         all_neuron_deltas.back()(neuron, 0) = ConA * AonZ; // populates the output deltas in the output layer of the all_neuron_deltas matrix
     }
     
@@ -238,8 +238,8 @@ void update_weights_and_biases(Neural_Network* NN, double learning_rate, double 
     for (int L=0 ; L<NN->connection_layers.size() ; L++){ // L goes 0, 1, 2
 
         // Update the NN connection and bias layers
-        NN->connection_layers[L] += (learning_rate / batch_counter) * NN->connection_update_layers[L];
-        NN->bias_layers[L] += (learning_rate / batch_counter) * NN->bias_update_layers[L];
+        NN->connection_layers[L] -= (learning_rate / batch_counter) * NN->connection_update_layers[L];
+        NN->bias_layers[L] -= (learning_rate / batch_counter) * NN->bias_update_layers[L];
 
         // Reset connection and bias update layer to zero
         NN->connection_update_layers[L].setZero();
